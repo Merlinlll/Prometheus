@@ -388,7 +388,30 @@ void send_pos_vel_xy_pos_z_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::
 
     setpoint_raw_local_pub.publish(pos_setpoint);
 }
+void send_pos_vel_acc_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, const Eigen::Vector3d& accel_sp, float yaw_sp)
+{
+    mavros_msgs::PositionTarget pos_setpoint;
 
+    // 速度作为前馈项， 参见FlightTaskOffboard.cpp
+    // 2. position setpoint + velocity setpoint (velocity used as feedforward)
+    // 控制方法请见 PositionControl.cpp
+    pos_setpoint.type_mask = 0b100111000000;   // 100 111 000 000  vx vy　vz x y z+ yaw
+
+    pos_setpoint.coordinate_frame = 1;
+
+    pos_setpoint.position.x = pos_sp[0];
+    pos_setpoint.position.y = pos_sp[1];
+    pos_setpoint.position.z = pos_sp[2];
+    pos_setpoint.velocity.x = vel_sp[0];
+    pos_setpoint.velocity.y = vel_sp[1];
+    pos_setpoint.velocity.z = vel_sp[2];
+    pos_setpoint.acceleration_or_force.x = accel_sp[0];
+    pos_setpoint.acceleration_or_force.y = accel_sp[1];
+    pos_setpoint.acceleration_or_force.z = accel_sp[2];
+    pos_setpoint.yaw = yaw_sp;
+
+    setpoint_raw_local_pub.publish(pos_setpoint);
+}
 void send_pos_vel_xyz_setpoint(const Eigen::Vector3d& pos_sp, const Eigen::Vector3d& vel_sp, float yaw_sp)
 {
     mavros_msgs::PositionTarget pos_setpoint;

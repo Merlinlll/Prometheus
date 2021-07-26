@@ -11,6 +11,10 @@
 
 	<node pkg="prometheus_swarm_control" type="swarm_terminal_control" name="swarm_terminal_control" output="screen" launch-prefix="gnome-terminal --">	
 		<param name="uav_id" value="1" />
-		<param name="sim_mode" value="true" />
+		<param name="sim_mode" value="false" />
 	</node>
-</launch>    
+	  <arg name="visualization" default="true"/>
+    	<group if="$(arg visualization)">
+          <node type="rviz" name="rviz" pkg="rviz" args="-d $(find prometheus_gazebo)/launch_ego_planner/ego.rviz" />
+    </group>
+</launch>

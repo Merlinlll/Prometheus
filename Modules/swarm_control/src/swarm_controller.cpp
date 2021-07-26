@@ -1,5 +1,18 @@
 #include "swarm_controller.h"
+void pos_target_cb(const mavros_msgs::PositionTarget::ConstPtr& msg)
+{
+    //Target pos of the drone [from fcu]
+    Eigen::Vector3d pos_drone_fcu_target;
+    //Target vel of the drone [from fcu]
+    Eigen::Vector3d vel_drone_fcu_target;
+    //Target accel of the drone [from fcu]
+    Eigen::Vector3d accel_drone_fcu_target;
+    pos_drone_fcu_target = Eigen::Vector3d(msg->position.x, msg->position.y, msg->position.z);
 
+    vel_drone_fcu_target = Eigen::Vector3d(msg->velocity.x, msg->velocity.y, msg->velocity.z);
+
+    accel_drone_fcu_target = Eigen::Vector3d(msg->acceleration_or_force.x, msg->acceleration_or_force.y, msg->acceleration_or_force.z);
+}
 using namespace std;
 void mainloop_cb(const ros::TimerEvent &e);
 void control_cb(const ros::TimerEvent &e);
@@ -19,7 +32,7 @@ int main(int argc, char **argv)
     {
         printf_param();
     }
-
+    position_target_sub = nh.subscribe<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/target_local", 10, pos_target_cb);
     //【订阅】集群控制指令
     command_sub = nh.subscribe<prometheus_msgs::SwarmCommand>(uav_name + "/prometheus/swarm_command", 10, swarm_command_cb);
 
@@ -35,7 +48,7 @@ int main(int argc, char **argv)
 
     // 【发布】位置/速度/加速度期望值 坐标系 ENU系
     //  本话题要发送至飞控(通过Mavros功能包 /plugins/setpoint_raw.cpp发送), 对应Mavlink消息为SET_POSITION_TARGET_LOCAL_NED (#84), 对应的飞控中的uORB消息为position_setpoint_triplet.msg
-    setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>(uav_name + "/mavros/setpoint_raw/local", 10);
+    setpoint_raw_local_pub = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", 10);
     
     // 【发布】姿态期望值 
     setpoint_raw_attitude_pub = nh.advertise<mavros_msgs::AttitudeTarget>(uav_name +  "/mavros/setpoint_raw/attitude", 10);
@@ -104,7 +117,7 @@ void mainloop_cb(const ros::TimerEvent &e)
             Takeoff_position = pos_drone;
             pos_des[0] = pos_drone[0];
             pos_des[1] = pos_drone[1];
-            pos_des[2] = pos_drone[2] + 1.0;
+            pos_des[2] = pos_drone[2] + 0.8;
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des    = yaw_drone;
@@ -215,21 +228,20 @@ void mainloop_cb(const ros::TimerEvent &e)
         //　此控制方式即为　期望位置点控制, 仅针对单个飞机
         if(Command_Now.Move_mode == prometheus_msgs::SwarmCommand::XYZ_POS)
         {
-            pos_des[0] = Command_Now.position_ref[0];
-            pos_des[1] = Command_Now.position_ref[1];
-            pos_des[2] = Command_Now.position_ref[2];
-            vel_des << 0.0, 0.0, 0.0;
-            acc_des << 0.0, 0.0, 0.0;
+            for(int i = 0; i < 3; i++)
+            {
+                pos_des [i] = Command_Now.position_ref[i];
+            }
+            //pos_des [2] = 0.8;
             yaw_des = Command_Now.yaw_ref;
         }else if(Command_Now.Move_mode == prometheus_msgs::SwarmCommand::XY_VEL_Z_POS)
         {
-            pos_des[0] = 0.0;
-            pos_des[1] = 0.0;
-            pos_des[2] = Command_Now.position_ref[2];
-            vel_des[0] = Command_Now.velocity_ref[0];
-            vel_des[1] = Command_Now.velocity_ref[1];
-            vel_des[2] = 0.0;
-            acc_des << 0.0, 0.0, 0.0;
+            for(int i = 0; i < 3; i++)
+            {
+                pos_des [i] = Command_Now.position_ref[i];
+                vel_des [i] =  Command_Now.velocity_ref[i];
+                acc_des [i] = Command_Now.acceleration_ref[i];
+            }
             yaw_des = Command_Now.yaw_ref;
         }else if(Command_Now.Move_mode == prometheus_msgs::SwarmCommand::TRAJECTORY)
         {
@@ -254,9 +266,9 @@ void mainloop_cb(const ros::TimerEvent &e)
 
         break;
 
-    case prometheus_msgs::SwarmCommand::User_Mode1:
+    //case prometheus_msgs::SwarmCommand::User_Mode1:
 
-        break;
+        //break;
     }
     Command_Last = Command_Now;
 }
@@ -305,7 +317,7 @@ void control_cb(const ros::TimerEvent &e)
                 send_pos_setpoint(pos_des, yaw_des);
             }else if(Command_Now.Move_mode == prometheus_msgs::SwarmCommand::XY_VEL_Z_POS)
             {
-                send_vel_xy_pos_z_setpoint(pos_des, vel_des, yaw_des);
+                send_pos_vel_acc_setpoint(pos_des, vel_des, acc_des,yaw_des);
             }else if(Command_Now.Move_mode == prometheus_msgs::SwarmCommand::TRAJECTORY)
             {
                 send_pos_vel_xyz_setpoint(pos_des, vel_des, yaw_des);

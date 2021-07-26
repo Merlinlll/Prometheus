@@ -682,7 +682,7 @@ void GridMap::updateOccupancyCallback(const ros::TimerEvent & /*event*/)
     return;
   }
 
-  std::cout << "updateOccupancyCallback 1!" << std::endl;
+  //std::cout << "updateOccupancyCallback 1!" << std::endl;
   md_.last_occ_update_time_ = ros::Time::now();
 
   /* update occupancy */
@@ -717,7 +717,7 @@ void GridMap::depthPoseCallback(const sensor_msgs::ImageConstPtr &img,
                                 const geometry_msgs::PoseStampedConstPtr &pose)
 {
 
-  std::cout << "test 1!" << std::endl;
+  //std::cout << "test 1!" << std::endl;
 
   /* get depth image */
   cv_bridge::CvImagePtr cv_ptr;
