@@ -10,7 +10,7 @@
 #include <std_msgs/Empty.h>
 #include <vector>
 #include <visualization_msgs/Marker.h>
-
+#include <traj_utils/planning_visualization.h>
 #include <bspline_opt/bspline_optimizer.h>
 #include <plan_env/grid_map.h>
 #include <traj_utils/Bspline.h>
@@ -18,7 +18,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <traj_utils/DataDisp.h>
 #include <plan_manage/planner_manager.h>
-#include <traj_utils/planning_visualization.h>
+//#include <traj_utils/planning_visualization.h>
 
 using std::vector;
 

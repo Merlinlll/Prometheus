@@ -1,5 +1,5 @@
-
 #include <plan_manage/ego_replan_fsm.h>
+// #include <traj_utils/planning_visualization.h>
 
 namespace ego_planner
 {
@@ -166,7 +166,7 @@ namespace ego_planner
         changeFSMExecState(REPLAN_TRAJ, "TRIG");
       }
 
-      // 发布GlobalPath用于显示 "/drone_x_ego_planner_node/global_list" - [GlobalPath,大小,id]
+      /*// 发布GlobalPath用于显示 "/drone_x_ego_planner_node/global_list" - [GlobalPath,大小,id]  */
       visualization_->displayGlobalPathList(gloabl_traj, 0.1, 0);
     }
     else

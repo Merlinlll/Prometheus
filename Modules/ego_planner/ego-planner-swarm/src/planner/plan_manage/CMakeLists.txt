@@ -19,7 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   bspline_opt
   traj_utils
   message_generation
-  cv_bridge
+  #cv_bridge
   prometheus_msgs
 )
 

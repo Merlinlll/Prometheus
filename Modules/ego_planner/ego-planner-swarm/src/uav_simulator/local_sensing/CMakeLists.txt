@@ -20,7 +20,7 @@ if(ENABLE_CUDA)
 #       -gencode arch=compute_52,code=sm_52; 
 #       -gencode arch=compute_60,code=sm_60;
 #       -gencode arch=compute_61,code=sm_61;
-      -gencode arch=compute_75,code=sm_75;
+      -gencode arch=compute_75,code=smcv_bridge_75;
   ) 
 
   SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
@@ -30,7 +30,7 @@ if(ENABLE_CUDA)
   find_package(Boost REQUIRED COMPONENTS system filesystem)
 
   find_package(catkin REQUIRED COMPONENTS
-      roscpp roslib cmake_modules cv_bridge image_transport pcl_ros sensor_msgs geometry_msgs nav_msgs quadrotor_msgs dynamic_reconfigure)
+      roscpp roslib cmake_modules image_transport pcl_ros sensor_msgs geometry_msgs nav_msgs quadrotor_msgs dynamic_reconfigure)
   generate_dynamic_reconfigure_options(
     cfg/local_sensing_node.cfg
   )
