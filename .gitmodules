@@ -1,0 +1,3 @@
+[submodule "Modules/VINS-Fusion"]
+	path = Modules/VINS-Fusion
+	url = https://github.com/amov-lab/VINS-Fusion.git
