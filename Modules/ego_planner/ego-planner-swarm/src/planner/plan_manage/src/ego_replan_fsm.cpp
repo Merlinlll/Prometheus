@@ -192,7 +192,7 @@ namespace ego_planner
     init_pt_ = odom_pos_;
 
     // 此处定高1米
-    Eigen::Vector3d end_wp(msg->pose.position.x, msg->pose.position.y, 0.75);
+    Eigen::Vector3d end_wp(msg->pose.position.x, msg->pose.position.y, 0.5);
 
     // 发布目标点用于显示 - [目标点,颜色,大小,id]
     visualization_->displayGoalPoint(end_wp, Eigen::Vector4d(0, 0.5, 0.5, 1), 0.3, 1);

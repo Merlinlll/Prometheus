@@ -7,7 +7,7 @@
 	<arg name="uav_init_x" default="0.0"/>
     <arg name="uav_init_y" default="0.0"/>
 	<!-- swarm_estimator 参数 -->
-	<arg name="input_source" default="3"/>
+	<arg name="input_source" default="4"/>
 
 	<!-- publish tf -->
 	 <include file="$(find p450_experiment)/launch_basic/cam_tf.launch">

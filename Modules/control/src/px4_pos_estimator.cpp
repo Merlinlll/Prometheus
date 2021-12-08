@@ -150,16 +150,27 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     }
 }
 
-void slam_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
+void slam_cb(const nav_msgs::Odometry::ConstPtr &msg)
+//void slam_cb(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    if (msg->header.frame_id == "map_slam")
+    //if (msg->header.frame_id == "map_slam")
+    if(msg->header.frame_id == "world")
     {
-        pos_drone_slam = Eigen::Vector3d(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+        //pos_drone_slam = Eigen::Vector3d(msg->pose.position.y, -msg->pose.position.x, msg->pose.position.z);
+        pos_drone_slam = Eigen::Vector3d(msg->pose.pose.position.y, -msg->pose.pose.position.x, msg->pose.pose.position.z);
         // pos_drone_gazebo[0] = msg->pose.pose.position.x + pos_offset[0];
         // pos_drone_gazebo[1] = msg->pose.pose.position.y + pos_offset[1];
         // pos_drone_gazebo[2] = msg->pose.pose.position.z + pos_offset[2];
 
-        q_slam = Eigen::Quaterniond(msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
+        //q_slam = Eigen::Quaterniond(msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
+        q_slam = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+        Eigen::AngleAxisd roll(M_PI/2,Eigen::Vector3d::UnitX());
+        Eigen::AngleAxisd pitch(0,Eigen::Vector3d::UnitY());
+        Eigen::AngleAxisd yaw(0,Eigen::Vector3d::UnitZ());
+
+        Eigen::Quaterniond _q_slam = roll * pitch * yaw;
+        q_slam = q_slam * _q_slam;
+
         Euler_slam = quaternion_to_euler(q_slam);
         // Euler_gazebo[2] = Euler_gazebo[2] + yaw_offset;
         // q_gazebo = quaternion_from_rpy(Euler_gazebo);
@@ -226,7 +237,9 @@ int main(int argc, char **argv)
     ros::Subscriber gazebo_sub = nh.subscribe<nav_msgs::Odometry>("/prometheus/ground_truth/p300_basic", 100, gazebo_cb);
 
     // 【订阅】SLAM估计位姿
-    ros::Subscriber slam_sub = nh.subscribe<geometry_msgs::PoseStamped>("/slam/pose", 100, slam_cb);
+    //ros::Subscriber slam_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vins_estimator/odometry", 100, slam_cb);
+
+   ros::Subscriber slam_sub = nh.subscribe<nav_msgs::Odometry>("/vins_estimator/odometry", 100, slam_cb);
 
     // 【发布】无人机位置和偏航角 坐标系 ENU系
     //  本话题要发送飞控(通过mavros_extras/src/plugins/vision_pose_estimate.cpp发送), 对应Mavlink消息为VISION_POSITION_ESTIMATE(#102), 对应的飞控中的uORB消息为vehicle_vision_position.msg 及 vehicle_vision_attitude.msg

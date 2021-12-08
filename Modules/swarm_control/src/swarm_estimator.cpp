@@ -45,6 +45,11 @@ ros::Time mocap_timestamp;                  // mocap时间戳
 Eigen::Vector3d pos_drone_t265;
 Eigen::Quaterniond q_t265;
 Eigen::Vector3d Euler_t265;
+
+
+Eigen::Vector3d pos_drone_slam;
+Eigen::Quaterniond q_slam;
+Eigen::Vector3d Euler_slam;
 Eigen::Vector3d pos_drone_gazebo;           // 无人机当前位置 (gazebo)
 Eigen::Quaterniond q_gazebo;                // 无人机当前姿态 - 四元数 (gazebo)
 Eigen::Vector3d Euler_gazebo;               // 无人机当前姿态 - 欧拉角 (gazebo)
@@ -59,6 +64,7 @@ ros::Subscriber velocity_sub;
 ros::Subscriber attitude_sub;
 ros::Subscriber alt_sub;
 ros::Subscriber t265_sub;
+ros::Subscriber slam_sub;
 ros::Subscriber mocap_sub;
 ros::Subscriber gazebo_sub;
 // 发布话题
@@ -191,6 +197,29 @@ void t265_cb(const nav_msgs::Odometry::ConstPtr &msg)
     }
 }
 
+void slam_cb(const nav_msgs::Odometry::ConstPtr &msg)
+{
+    if (msg->header.frame_id == "world")
+    {
+        pos_drone_slam = Eigen::Vector3d(msg->pose.pose.position.y, -msg->pose.pose.position.x, msg->pose.pose.position.z);
+
+        q_slam = Eigen::Quaterniond(msg->pose.pose.orientation.w, msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z);
+
+        Eigen::AngleAxisd roll(M_PI/2,Eigen::Vector3d::UnitX());
+        Eigen::AngleAxisd pitch(0,Eigen::Vector3d::UnitY());
+        Eigen::AngleAxisd yaw(0,Eigen::Vector3d::UnitZ());
+
+        Eigen::Quaterniond _q_slam = roll * pitch * yaw;
+        q_slam = q_slam * _q_slam;
+        cout<<q_slam.w()<<q_slam.x()<<q_slam.y()<<q_slam.z()<<endl;
+        Euler_slam = quaternion_to_euler(q_slam);
+    }
+    else
+    {
+        pub_message(message_pub, prometheus_msgs::Message::NORMAL, NODE_NAME, "wrong slam frame id.");
+    }
+}
+
 void timercb_vision(const ros::TimerEvent &e)
 {
     geometry_msgs::PoseStamped vision;
@@ -234,6 +263,17 @@ void timercb_vision(const ros::TimerEvent &e)
         vision.pose.orientation.y = q_t265.y();
         vision.pose.orientation.z = q_t265.z();
         vision.pose.orientation.w = q_t265.w();
+    }
+else if (input_source == 4)
+    {
+        vision.pose.position.x = pos_drone_slam[0];
+        vision.pose.position.y = pos_drone_slam[1];
+        vision.pose.position.z = pos_drone_slam[2];
+
+        vision.pose.orientation.x = q_slam.x();
+        vision.pose.orientation.y = q_slam.y();
+        vision.pose.orientation.z = q_slam.z();
+        vision.pose.orientation.w = q_slam.w();
     }
     else
     {
@@ -344,6 +384,9 @@ int main(int argc, char **argv)
 
     //  【订阅】t265估计位置
     t265_sub = nh.subscribe<nav_msgs::Odometry>("/t265/odom/sample", 100, t265_cb);
+
+    slam_sub = nh.subscribe<nav_msgs::Odometry>("/vins_estimator/odometry", 100, slam_cb);
+
     
     // 【订阅】mocap估计位置
     mocap_sub = nh.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node"+ uav_name + "/pose", 10, mocap_cb);

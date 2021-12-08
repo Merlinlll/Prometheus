@@ -140,6 +140,14 @@ namespace ego_planner
     Eigen::MatrixXd P = control_points_;
     int dimension = control_points_.rows();
 
+    double max_hig=1.5;
+    for(int i=0;i<P.cols();i++)
+    {
+      if(P.col(i)[2]>max_hig){
+        P.col(i)[2]=max_hig;
+      }
+    }
+    
     /* check vel feasibility and insert points */
     double max_vel = -1.0;
     double enlarged_vel_lim = limit_vel_ * (1.0 + feasibility_tolerance_) + 1e-4;
