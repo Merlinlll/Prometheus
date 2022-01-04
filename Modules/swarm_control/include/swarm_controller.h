@@ -10,6 +10,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/AttitudeTarget.h>
 #include <prometheus_msgs/SwarmCommand.h>
+#include <prometheus_msgs/OffsetPose.h>
 #include <prometheus_msgs/DroneState.h>
 #include <nav_msgs/Odometry.h>
 #include <quadrotor_msgs/PositionCommand.h>
@@ -31,6 +32,8 @@ using namespace std;
 int swarm_num_uav;                                  // 集群数量
 string uav_name;                                // 无人机名字
 int uav_id;                                     // 无人机编号
+int input_source;                           // 0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据 3:使用GPS数据作为定位来源
+Eigen::Vector3f pos_offset;                 // 定位设备偏移量
 int num_neighbour = 2;                          // 邻居数量,目前默认为2
 int neighbour_id1,neighbour_id2;                // 邻居ID
 string neighbour_name1,neighbour_name2;         // 邻居名字
@@ -57,6 +60,7 @@ ros::Subscriber command_sub;
 ros::Subscriber drone_state_sub;
 ros::Subscriber position_target_sub;
 ros::Subscriber nei_state_sub[MAX_UAV_NUM+1];
+ros::Subscriber offset_sub;
 
 // 发布
 ros::Publisher setpoint_raw_local_pub;
@@ -134,6 +138,7 @@ void init(ros::NodeHandle &nh)
     nh.param<int>("controller_flag", controller_flag, 1);
     nh.param<int>("controller_hz", controller_hz, 50);
     nh.param<int>("collision_flag", collision_flag, 1);
+    nh.param<int>("input_source", input_source, 0);
     
     // 起飞高度,上锁高度,降落速度,降落模式
     nh.param<float>("Takeoff_height", Takeoff_height, 1.0);
@@ -282,6 +287,16 @@ void nei_state_cb(const prometheus_msgs::DroneState::ConstPtr& msg, int nei_id)
 
     pos_nei[nei_id]  = Eigen::Vector3d(msg->position[0], msg->position[1], msg->position[2]);
     vel_nei[nei_id]  = Eigen::Vector3d(msg->velocity[0], msg->velocity[1], msg->velocity[2]);
+}
+
+void offset_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
+{
+    if(input_source == 3)
+    {
+        pos_offset[0] = msg->x;
+        pos_offset[1] = msg->y;
+        pos_offset[2] = 0;
+    }
 }
 
 int check_failsafe()

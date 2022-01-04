@@ -8,6 +8,7 @@
 #include <Eigen/Eigen>
 
 #include <prometheus_msgs/DroneState.h>
+#include <prometheus_msgs/OffsetPose.h>
 
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/PositionTarget.h>
@@ -32,7 +33,7 @@ int uav_id;
 string uav_name;                            // 无人机名字(话题前缀)
 string object_name;                         // 动作捕捉软件中设定的刚体名字
 string msg_name;
-int input_source;                           // 0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据
+int input_source;                           // 0:使用mocap数据作为定位数据 1:使用laser数据作为定位数据 3:使用GPS数据作为定位来源
 Eigen::Vector3f pos_offset;                 // 定位设备偏移量
 float yaw_offset;                           // 定位设备偏移量
 prometheus_msgs::DroneState _DroneState;    // 无人机状态
@@ -55,6 +56,7 @@ ros::Subscriber attitude_sub;
 ros::Subscriber alt_sub;
 ros::Subscriber mocap_sub;
 ros::Subscriber gazebo_sub;
+ros::Subscriber offset_sub;
 // 发布话题
 ros::Publisher drone_state_pub;
 ros::Publisher vision_pub;
@@ -103,9 +105,18 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
 
 void pos_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    _DroneState.position[0] = msg->pose.position.x;
-    _DroneState.position[1] = msg->pose.position.y;
-    _DroneState.position[2] = msg->pose.position.z;
+    if(input_source == 3)
+    {
+        _DroneState.position[0] = msg->pose.position.x + pos_offset[0];
+        _DroneState.position[1] = msg->pose.position.y + pos_offset[1];
+        _DroneState.position[2] = msg->pose.position.z;
+    }
+    else
+    {
+        _DroneState.position[0] = msg->pose.position.x;
+        _DroneState.position[1] = msg->pose.position.y;
+        _DroneState.position[2] = msg->pose.position.z;
+    }
 }
 
 void vel_cb(const geometry_msgs::TwistStamped::ConstPtr &msg)
@@ -168,6 +179,15 @@ void gazebo_cb(const nav_msgs::Odometry::ConstPtr &msg)
     else
     {
         pub_message(message_pub, prometheus_msgs::Message::NORMAL, msg_name, "wrong gazebo ground truth frame id.");
+    }
+}
+
+void offset_cb(const prometheus_msgs::OffsetPose::ConstPtr &msg)
+{
+    if(input_source == 3)
+    {
+        pos_offset[0] = msg->x;
+        pos_offset[1] = msg->y;
     }
 }
 

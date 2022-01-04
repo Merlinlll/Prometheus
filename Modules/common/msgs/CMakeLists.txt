@@ -46,6 +46,12 @@ add_message_files(
   Case3Result.msg
   Msg103.msg
   Msg104.msg
+  OffsetPose.msg
+)
+
+add_service_files(
+  FILES
+  GetOffsetPose.srv
 )
 
 add_action_files(

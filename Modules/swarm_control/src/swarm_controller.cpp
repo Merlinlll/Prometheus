@@ -26,6 +26,9 @@ int main(int argc, char **argv)
     //【订阅】本机状态信息
     drone_state_sub = nh.subscribe<prometheus_msgs::DroneState>(uav_name + "/prometheus/drone_state", 10, drone_state_cb);
 
+    // 【订阅】无人机当前位置与1号无人机偏移量 坐标系:ENU系
+    offset_sub = nh.subscribe<prometheus_msgs::OffsetPose>(uav_name + "/offset_pose", 10, offset_cb);
+
     //【订阅】邻居飞机的状态信息
     for(int i = 1; i <= swarm_num_uav; i++) 
     {
@@ -106,9 +109,12 @@ void mainloop_cb(const ros::TimerEvent &e)
         {
             // 设定起飞位置
             Takeoff_position = pos_drone;
-            pos_des[0] = pos_drone[0];
-            pos_des[1] = pos_drone[1];
-            pos_des[2] = pos_drone[2] + Takeoff_height;
+            if(input_source == 3)
+            {
+                pos_des[0] = 0;
+                pos_des[1] = 0;
+                pos_des[2] = Takeoff_height;
+            }
             vel_des << 0.0, 0.0, 0.0;
             acc_des << 0.0, 0.0, 0.0;
             yaw_des    = yaw_drone;
@@ -181,9 +187,9 @@ void mainloop_cb(const ros::TimerEvent &e)
     case prometheus_msgs::SwarmCommand::Position_Control:
 
         //　此控制方式即为　集中式控制，　直接由地面站指定期望位置点
-        pos_des[0] = Command_Now.position_ref[0] + formation_separation(uav_id-1,0) - gazebo_offset[0];
-        pos_des[1] = Command_Now.position_ref[1] + formation_separation(uav_id-1,1) - gazebo_offset[1];
-        pos_des[2] = Command_Now.position_ref[2] + formation_separation(uav_id-1,2) - gazebo_offset[2];
+        pos_des[0] = Command_Now.position_ref[0] + formation_separation(uav_id-1,0) - pos_offset[0];
+        pos_des[1] = Command_Now.position_ref[1] + formation_separation(uav_id-1,1) - pos_offset[1];
+        pos_des[2] = Command_Now.position_ref[2] + formation_separation(uav_id-1,2) - pos_offset[2];
         yaw_des = Command_Now.yaw_ref;
         break;
 

@@ -40,6 +40,9 @@ int main(int argc, char **argv)
     //  本话题来自飞控(通过Mavros功能包 /plugins/imu.cpp读取), 对应Mavlink消息为ATTITUDE (#30), 对应的飞控中的uORB消息为vehicle_attitude.msg
     attitude_sub = nh.subscribe<sensor_msgs::Imu>(uav_name + "/mavros/imu/data", 10, att_cb); 
 
+    // 【订阅】无人机当前位置与1号无人机偏移量 坐标系:ENU系
+    offset_sub = nh.subscribe<prometheus_msgs::OffsetPose>(uav_name + "/offset_pose", 10, offset_cb);
+
     // 【订阅】无人机相对高度 此订阅仅针对户外实验
     alt_sub = nh.subscribe<std_msgs::Float64>(uav_name + "/mavros/global_position/rel_alt", 10, alt_cb);
 

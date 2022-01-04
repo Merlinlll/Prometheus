@@ -90,6 +90,14 @@ target_link_libraries(swarm_terminal_control ${catkin_LIBRARIES})
 add_executable(ego_traj_to_cmd src/ego_traj_to_cmd.cpp)
 add_dependencies(ego_traj_to_cmd prometheus_swarm_control_gencpp)
 target_link_libraries(ego_traj_to_cmd ${catkin_LIBRARIES})
+
+add_executable(swarm_offset_pose src/swarm_offset_pose.cpp)
+add_dependencies(swarm_offset_pose prometheus_swarm_control_gencpp)
+target_link_libraries(swarm_offset_pose ${catkin_LIBRARIES})
+
+add_executable(offset_pose_client src/offset_pose_client.cpp)
+add_dependencies(offset_pose_client prometheus_swarm_control_gencpp)
+target_link_libraries(offset_pose_client ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############

@@ -1,0 +1,4 @@
+#无人机集群获取位置偏差的服务消息类型,预设支持10架无人机
+uint8 uav_num
+---
+OffsetPose[10] uavs_offset_pose
