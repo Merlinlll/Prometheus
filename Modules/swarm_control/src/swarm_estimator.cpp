@@ -6,6 +6,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, NODE_NAME);
+    //使用~，则发布话题节点为/NODE_NAME/XX
     ros::NodeHandle nh("~");
 
     // 读取参数

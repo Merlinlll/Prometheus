@@ -87,6 +87,10 @@ add_executable(swarm_terminal_control src/swarm_terminal_control.cpp)
 add_dependencies(swarm_terminal_control prometheus_swarm_control_gencpp)
 target_link_libraries(swarm_terminal_control ${catkin_LIBRARIES})
 
+add_executable(swarm_auto_loctest src/swarm_auto_loctest.cpp)
+add_dependencies(swarm_auto_loctest prometheus_swarm_control_gencpp)
+target_link_libraries(swarm_auto_loctest ${catkin_LIBRARIES})
+
 add_executable(ego_traj_to_cmd src/ego_traj_to_cmd.cpp)
 add_dependencies(ego_traj_to_cmd prometheus_swarm_control_gencpp)
 target_link_libraries(ego_traj_to_cmd ${catkin_LIBRARIES})
